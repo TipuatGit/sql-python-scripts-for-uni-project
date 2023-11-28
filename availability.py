@@ -2,7 +2,6 @@ import datetime
 from random import randint, choice, choices
 import mariadb
 
-
 # Connect to MariaDB Platform
 conn = mariadb.connect( user="root", password="password", host="127.0.0.1", port=3306, database="airbnb" )
 
