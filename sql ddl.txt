@@ -1,0 +1,287 @@
+CREATE TABLE `user` (
+`userID` INTEGER(11) NOT NULL AUTO_INCREMENT,
+`name` VARCHAR(100) NOT NULL,
+`email` VARCHAR(100) NOT NULL,
+`phone_number` VARCHAR(13) NOT NULL,
+`password` VARCHAR(200) NOT NULL,
+`date_created` DATETIME NOT NULL,
+PRIMARY KEY (userID) );
+
+CREATE TABLE `host` (
+`hostID` INTEGER(11) NOT NULL AUTO_INCREMENT,
+`userID` INTEGER(11) NOT NULL,
+`address` VARCHAR(200) NOT NULL,
+PRIMARY KEY (hostID),
+CONSTRAINT `fk_userid_host` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) );
+
+CREATE TABLE `listing` (
+`listingID` INTEGER(11) AUTO_INCREMENT,
+`hostID` INTEGER(11) NOT NULL,
+`listing_addressID` INTEGER(11),
+`description` TEXT NOT NULL,
+`bedrooms` INTEGER(1) NOT NULL,
+`bathrooms` INTEGER(1) NOT NULL,
+`price` DECIMAL(10,5) NOT NULL,
+PRIMARY KEY (`listingID`),
+CONSTRAINT `fk_hostid_listing` FOREIGN KEY (`hostID`) REFERENCES `host` (`hostID`) );
+
+CREATE TABLE `listing_address` (
+`listing_addressID` INTEGER(11) NOT NULL AUTO_INCREMENT,
+`country` VARCHAR(50) NOT NULL,
+`state` VARCHAR(50),
+`province` VARCHAR(50) NOT NULL,
+`city` VARCHAR(50) NOT NULL,
+`sector` VARCHAR(50),
+`postcode` VARCHAR(10),
+`zipcode` VARCHAR(10),
+`area` VARCHAR(20),
+`street` VARCHAR(50),
+`house_number` VARCHAR(20) NOT NULL,
+`longitude` DECIMAL(9,6) NOT NULL,
+`latitude` DECIMAL(8,6) NOT NULL,
+PRIMARY KEY (`listing_addressID`) );
+
+CREATE TABLE `property_category` (
+`categoryID` INTEGER NOT NULL,
+`listingID` INTEGER(11) NOT NULL,
+`budget` BOOLEAN NOT NULL,
+`standard` BOOLEAN NOT NULL,
+`luxury` BOOLEAN NOT NULL,
+PRIMARY KEY (`categoryID`),
+CONSTRAINT `fk_listingid_property_category` FOREIGN KEY (`listingID`) REFERENCES `listing` (`listingID`) );
+
+CREATE TABLE `property_type` (
+`typeID` INTEGER NOT NULL,
+`listingID` INTEGER(11),
+`appartment` BOOLEAN NOT NULL,
+`house` BOOLEAN NOT NULL,
+`vacation_rental` BOOLEAN NOT NULL,
+PRIMARY KEY (`typeID`),
+CONSTRAINT `fk_listingid_property_type` FOREIGN KEY (`listingID`) REFERENCES `listing` (`listingID`) );
+
+CREATE TABLE `amenities` (
+`amenitiesID` INTEGER NOT NULL,
+`listingID` INTEGER(11),
+`wifi` BOOLEAN NOT NULL,
+`air_conditioning` BOOLEAN NOT NULL,
+`parking` BOOLEAN NOT NULL,
+`food_street` BOOLEAN,
+`shopping_street` BOOLEAN,
+`park` BOOLEAN,
+PRIMARY KEY (`amenitiesID`),
+CONSTRAINT `fk_listingid_amenities` FOREIGN KEY (`listingID`) REFERENCES `listing` (`listingID`) );
+
+CREATE TABLE `availability` (
+`availabilityID` INTEGER NOT NULL,
+`listingID` INTEGER(11),
+`available_from`  DATE NOT NULL,
+`available_until` DATE NOT NULL,
+PRIMARY KEY (`availabilityID`),
+CONSTRAINT `fk_listingid_availability` FOREIGN KEY (`listingID`) REFERENCES `listing` (`listingID`) );
+
+CREATE TABLE `room_type` (
+`roomID` INTEGER NOT NULL,
+`listingID` INTEGER(11) NOT NULL,
+`small` BOOLEAN NOT NULL,
+`medium` BOOLEAN NOT NULL,
+`large` BOOLEAN NOT NULL,
+PRIMARY KEY (`roomID`),
+CONSTRAINT `fk_listingid_room_type` FOREIGN KEY (`listingID`) REFERENCES `listing` (`listingID`) );
+
+CREATE TABLE `images` (
+`imageID` INTEGER(15) NOT NULL,
+`image` BLOB,
+`url` TEXT,
+`file_location` TEXT,
+PRIMARY KEY (`imageID`) );
+
+CREATE TABLE `listing_images` (
+`ID` INT(11) NOT NULL AUTO_INCREMENT,
+`listing_imagesID` INTEGER NOT NULL,
+`imageID` INTEGER NOT NULL,
+`listingID` INTEGER NOT NULL,
+PRIMARY KEY (`ID`),
+CONSTRAINT `fk_imagesid_listing_images` FOREIGN KEY (`imageID`) REFERENCES `images` (`imageID`),
+CONSTRAINT `fk_listingid_listing_images` FOREIGN KEY (`listingID`) REFERENCES `listing` (`listingID`) );
+
+CREATE TABLE `guest` (
+`guestID` INTEGER(11) NOT NULL AUTO_INCREMENT,
+`userID` INTEGER(11) NOT NULL,
+`passport_number` VARCHAR(14) NOT NULL,
+`legal_address` VARCHAR(200) NOT NULL,
+`id_document` VARCHAR(20),
+PRIMARY KEY (`guestID`),
+CONSTRAINT `fk_userid_guest` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) );
+
+CREATE TABLE `booking` (
+`bookingID` INTEGER(20) NOT NULL AUTO_INCREMENT,
+`guestID` INTEGER(11) NOT NULL,
+`listingID` INTEGER(11) NOT NULL,
+`booking_date` DATETIME NOT NULL,
+`booking_from` DATE NOT NULL,
+`booking_until` DATE NOT NULL,
+`check_in` DATETIME,
+`check_out` DATETIME,
+`total_price` DECIMAL NOT NULL,
+`guest_num` INTEGER NOT NULL,
+`status` TEXT,
+PRIMARY KEY (`bookingID`),
+CONSTRAINT `fk_guestid_booking` FOREIGN KEY (`guestID`) REFERENCES `guest` (`guestID`),
+CONSTRAINT `fk_listingid_booking` FOREIGN KEY (`listingID`) REFERENCES `listing` (`listingID`) );
+
+CREATE TABLE `payments` (
+`paymentID` INTEGER(11) NOT NULL,
+`guestID` INTEGER(11) NOT NULL,
+`service_chargesID` INTEGER(5) NOT NULL,
+`currencyID` INTEGER(11) NOT NULL,
+`bookingID` INTEGER(11) NOT NULL,
+`payment_date` DATETIME NOT NULL,
+`payment_method` VARCHAR(20) NOT NULL,
+`amount` DECIMAL NOT NULL,
+PRIMARY KEY (`paymentID`),
+CONSTRAINT `fk_guestid_payments` FOREIGN KEY (`guestID`) REFERENCES `guest` (`guestID`),
+CONSTRAINT `fk_bookingid_payments` FOREIGN KEY (`bookingID`) REFERENCES `booking` (`bookingID`) );
+
+CREATE TABLE `currency` (
+`currencyID` VARCHAR(6) NOT NULL,
+`name` VARCHAR(50) NOT NULL,
+`symbol` VACHAR(6) NOT NULL,
+`exchange_rate` DECIMAL(20,10) NOT NULL,
+PRIMARY KEY (`currencyID`) );
+
+CREATE TABLE `taxes` (
+`taxID` INTEGER(11) NOT NULL,
+`tax_amount` DECIMAL NOT NULL,
+`tax_type` VARCHAR(20) NOT NULL,
+PRIMARY KEY (`taxID`) );
+
+CREATE TABLE `payments_taxes` (
+`ID` INT(11) NOT NULL AUTO_INCREMENT,
+`paymentID` INTEGER(11) NOT NULL,
+`taxID` INTEGER(11) NOT NULL,
+PRIMARY KEY (`ID`),
+CONSTRAINT `fk_paymentid_payments_taxes` FOREIGN KEY (`paymentID`) REFERENCES `payments` (`paymentID`),
+CONSTRAINT `fk_taxid_payments_taxes` FOREIGN KEY (`taxID`) REFERENCES `taxes` (`taxID`) );
+
+CREATE TABLE `service_charges` (
+`service_chargesID` INTEGER(5) NOT NULL,
+`amount` DECIMAL NOT NULL,
+`service_grade` VARCHAR(20) NOT NULL,
+PRIMARY KEY (`service_chargesID`) );
+
+CREATE TABLE `coupons` (
+`couponID` INTEGER(5) NOT NULL,
+`bookingID` INTEGER(11) NOT NULL,
+`code` VARCHAR(8) NOT NULL,
+`discount` DECIMAL NOT NULL,
+`creation_date` DATETIME NOT NULL,
+`expiry_date` DATETIME NOT NULL,
+PRIMARY KEY (`couponID`),
+CONSTRAINT `fk_bookingid_coupons` FOREIGN KEY (`bookingID`) REFERENCES `booking` (`bookingID`) );
+
+CREATE TABLE `reviews` (
+`reviewID` INTEGER(11) NOT NULL,
+`listingID` INTEGER(11) NOT NULL,
+`guestID` INTEGER(11) NOT NULL,
+`timestamp` DATETIME NOT NULL,
+`comment` TEXT,
+`rating` INTEGER(1),
+PRIMARY KEY (`reviewID`),
+CONSTRAINT `fk_guestid_reviews` FOREIGN KEY (`guestID`) REFERENCES `guest` (`guestID`),
+CONSTRAINT `fk_listingid_reviews` FOREIGN KEY (`listingID`) REFERENCES `listing` (`listingID`) );
+
+CREATE TABLE `messages` (
+`messageID` INTEGER(11) NOT NULL,
+`guestID` INTEGER(11) NOT NULL,
+`hostID` INTEGER(11) NOT NULL,
+`timestamp` DATETIME NOT NULL,
+`text` TEXT NOT NULL,
+`message_by_host` BOOLEAN NOT NULL,
+PRIMARY KEY (`messageID`),
+CONSTRAINT `fk_guestid_messages` FOREIGN KEY (`guestID`) REFERENCES `guest` (`guestID`),
+CONSTRAINT `fk_hostid_messages` FOREIGN KEY (`hostID`) REFERENCES `host` (`hostID`) );
+
+CREATE TABLE `language` (
+`languageID` INTEGER(11) NOT NULL,
+`code` VARCHAR(5) NOT NULL,
+`name` VARCHAR(20) NOT NULL,
+PRIMARY KEY (`languageID`) );
+
+CREATE TABLE `messages_language` (
+`ID` INT(11) NOT NULL AUTO_INCREMENT,
+`messageID` INTEGER NOT NULL,
+`languageID` INTEGER NOT NULL,
+PRIMARY KEY (`ID`),
+CONSTRAINT `fk_languageid_messages_languages` FOREIGN KEY (`languageID`)
+REFERENCES `language` (`languageID`),
+CONSTRAINT `fk_messageid_messages_languages` FOREIGN KEY (`messageID`)
+REFERENCES `messages` (`messageID`) );
+
+CREATE TABLE `host_language` (
+`ID` INT(11) NOT NULL AUTO_INCREMENT,
+`hostID` INTEGER NOT NULL,
+`languageID` INTEGER NOT NULL,
+PRIMARY KEY (`ID`),
+CONSTRAINT `fk_hostid_host_language` FOREIGN KEY (`hostID`) REFERENCES `host` (`hostID`),
+CONSTRAINT `fk_languageid_host_language` FOREIGN KEY (`languageID`) REFERENCES `language` (`languageID`) );
+
+CREATE TABLE ratings_on_guest (
+`ratingID` INTEGER(11) NOT NULL,
+`guestID` INTEGER(11) NOT NULL,
+`rating` INTEGER(1) NOT NULL,
+PRIMARY KEY (`ratingID`),
+CONSTRAINT `fk_guestid_host_rates_guest` FOREIGN KEY (`guestID`) REFERENCES `guest` (`guestID`) );
+
+CREATE TABLE `host_ratings_on_guest` (
+`ID` INT(11) NOT NULL AUTO_INCREMENT,
+`ratingID` INTEGER NOT NULL,
+`hostID` INTEGER NOT NULL,
+PRIMARY KEY (`ID`),
+CONSTRAINT `fk_ratingid_host_ratings_on_guest` FOREIGN KEY (`ratingID`) REFERENCES `ratings_on_guest` (`ratingID`),
+CONSTRAINT `fk_hostid_host_ratings_on_guest` FOREIGN KEY (`hostID`) REFERENCES `host` (`hostID`) );
+
+CREATE TABLE `ratings_on_host` (
+`ratingID` INTEGER(11) NOT NULL,
+`hostID` INTEGER(11) NOT NULL,
+`rating` INTEGER(1) NOT NULL,
+PRIMARY KEY (`ratingID`),
+CONSTRAINT `fk_hostid_guest_rates_host` FOREIGN KEY (`hostID`) REFERENCES `host` (`hostID`) );
+
+CREATE TABLE `guest_ratings_on_host` (
+`ID` INT(11) NOT NULL AUTO_INCREMENT,
+`ratingID` INTEGER NOT NULL,
+`guestID` INTEGER NOT NULL,
+PRIMARY KEY (`ID`),
+CONSTRAINT `fk_ratingid_guest_ratings_on_host` FOREIGN KEY (`ratingID`) REFERENCES `ratings_on_host` (`ratingID`),
+CONSTRAINT `fk_guestid_guest_ratings_on_host` FOREIGN KEY (`guestID`) REFERENCES `guest` (`guestID`) );
+
+CREATE TABLE `user_social_networks` (
+`socialID` INTEGER(11) NOT NULL,
+`userID` INTEGER(11) NOT NULL,
+`social_network_url` TEXT,
+`rating_enabled` BOOLEAN NOT NULL,
+`created_at` DATETIME,
+`updated_at` DATETIME,
+PRIMARY KEY (`socialID`),
+CONSTRAINT `fk_userid_user_social_networks` FOREIGN KEY (`userID`) REFERENCES `user` (`userID`) );
+
+CREATE TABLE `wishlist` (
+`wishlistID` INTEGER NOT NULL AUTOINCREMENT,
+`guestID` INTEGER(11) NOT NULL,
+`listingID` INTEGER(11) NOT NULL,
+`wishlist_name` VARCHAR(100) NOT NULL,
+`listing_info` TEXT,
+`url` TEXT NOT NULL,
+PRIMARY KEY (`wishlistID`),
+CONSTRAINT `fk_guestid_wishlist` FOREIGN KEY (`guestID`) REFERENCES `guest` (`guestID`),
+CONSTRAINT `fk_listingid_wishlist` FOREIGN KEY (`listingID`) REFERENCES `listing` (`listingID`) );
+
+FAILS:
+images
+listing_images
+currency
+messages_languages
+ratings_on_host
+host_ratings_on_guest
+guest_ratings_on_host
+wishlist
